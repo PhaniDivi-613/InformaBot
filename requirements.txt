@@ -1,0 +1,5 @@
+transformers
+pymilvus==2.2.8
+numpy
+torch
+einops
