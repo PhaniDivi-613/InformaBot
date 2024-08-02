@@ -48,3 +48,18 @@ To set up a Milvus server, follow these steps:
    python populate_db.py
    ```
 This script will index the documents and store them in your Milvus server.
+
+### 2. How to Populate the Model
+
+1. Ensure you have a .env file in your project directory with the following environment variables:
+    ```bash
+    PROJECT_ID=your_project_id
+    PROJECT_URL=your_project_url
+    IC_API_KEY=your_api_key
+    ```
+
+2. Run the query.py script to query the database and generate responses using the IBM model:
+   ```bash
+   python query.py
+   ```
+The script will prompt you to enter your question, then retrieve relevant documents from Milvus, and finally generate a response using the IBM model.
