@@ -56,7 +56,7 @@ credentials = {
     "apikey": ic_api_key,
     "url": project_url
 }
-client = APIClient(credentials)
+apiclient = APIClient(credentials)
 
 def generate_query_embedding(query: str) -> np.ndarray:
     """Generates embedding for a query using Hugging Face model."""
@@ -231,9 +231,9 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Connection failed: {e}")
     else:
-        connections_list = client.connections.list()
+        connections_list = apiclient.connections.list()
         ibm_milvus_connection_id = connections_list[0]["ID"]
-        milvus_credentials = client.connections.get_details(ibm_milvus_connection_id).get("entity").get("properties")
+        milvus_credentials = apiclient.connections.get_details(ibm_milvus_connection_id).get("entity").get("properties")
         # Conncet to IBM Milvus Engine
         try:
             connections.connect(alias="default",
