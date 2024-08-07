@@ -6,6 +6,25 @@ from transformers import AutoTokenizer, AutoModel
 from pymilvus import Collection, CollectionSchema, FieldSchema, DataType, utility, connections
 from typing import List
 import pandas as pd
+import argparse
+from dotenv import load_dotenv
+
+from ibm_watsonx_ai.client import APIClient
+
+# Load environment variables from .env file
+load_dotenv()
+
+project_id = os.getenv('PROJECT_ID')
+project_url = os.getenv('PROJECT_URL')
+ic_api_key = os.getenv('IC_API_KEY')
+
+# IBM Model credentials
+credentials = {
+    "apikey": ic_api_key,
+    "url": project_url
+}
+client = APIClient(credentials)
+client.set.default_project(project_id)
 
 MODEL_NAME = 'nomic-ai/nomic-embed-text-v1'
 try:
@@ -19,17 +38,6 @@ except Exception as e:
 # Initialize Milvus client
 MILVUS_HOST = 'localhost'
 MILVUS_PORT = '19530'
-
-# Connect to Milvus server
-try:
-    connections.connect(
-        alias='default',
-        host=MILVUS_HOST,
-        port=MILVUS_PORT
-    )
-    print("Connected to Milvus successfully!")
-except Exception as e:
-    print(f"Connection failed: {e}")
 
 def markdown_to_text_splitter_by_heading(file_path: str) -> List[str]:
     """Reads a Markdown file and extracts text sections based on headings."""
@@ -123,9 +131,47 @@ def populate_db(knowledge_source_folder: str, collection_name: str):
     # Insert all texts and embeddings into Milvus
     insert_to_milvus(collection_name, all_texts, all_embeddings, all_file_names)
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Script to check --opensource-milvus argument")
+    parser.add_argument('--opensource-milvus', action='store_true', help='Flag to indicate if open source Milvus is used')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     KNOWLEDGE_SOURCE_FOLDER = 'knowledge-source'
     COLLECTION_NAME = 'knowledge_collection'
+
+    # Parse the command-line arguments
+    args = parse_arguments()
+    is_opensource_milvus = args.opensource_milvus
+    if is_opensource_milvus:
+        # Connect to Milvus server
+        try:
+            connections.connect(
+                alias='default',
+                host=MILVUS_HOST,
+                port=MILVUS_PORT
+            )
+            print("Connected to Milvus successfully!")
+        except Exception as e:
+            print(f"Connection failed: {e}")
+    else:
+        connections_list = client.connections.list()
+        ibm_milvus_connection_id = connections_list[0]["ID"]
+        milvus_credentials = client.connections.get_details(ibm_milvus_connection_id).get("entity").get("properties")
+        # Conncet to IBM Milvus Engine
+        try:
+            connections.connect(alias="default",
+                                host=milvus_credentials['host'],
+                                port=milvus_credentials['port'],
+                                user='ibmlhapikey',
+                                password=milvus_credentials['password'],
+                                secure=True
+            )
+            print("Connected to Milvus successfully!")
+        except Exception as e:
+            print(f"Connection failed: {e}")
+
     
     populate_db(KNOWLEDGE_SOURCE_FOLDER, COLLECTION_NAME)
     print("Database population complete.")

@@ -3,3 +3,7 @@ pymilvus==2.2.8
 numpy
 torch
 einops
+ibm_watsonx_ai
+flask
+slack_sdk
+slackeventsapi
