@@ -1,4 +1,4 @@
-# DocAssistant
+# InformaBot
 
 ## Overview
 
